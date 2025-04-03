@@ -5,10 +5,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-      - uses: actions/checkout@master
+        uses: actions/checkout@master
 
       - name: Upload files to Figshare
-      - uses: figshare/github-upload-action@v1.1
+        uses: figshare/github-upload-action@v1.1
         with:
           FIGSHARE_TOKEN: ${{ secrets.FIGSHARE_API_KEY }}
           FIGSHARE_ENDPOINT: 'https://api.figshare.com/v2'
