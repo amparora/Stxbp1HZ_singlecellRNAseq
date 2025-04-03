@@ -13,4 +13,4 @@ jobs:
           FIGSHARE_TOKEN: ${{ secrets.FIGSHARE_API_KEY }}
           FIGSHARE_ENDPOINT: 'https://api.figshare.com/v2'
           FIGSHARE_ARTICLE_ID: 28722524
-          DATA_DIR: './**'
+          DATA_DIR: './'
