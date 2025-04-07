@@ -15,6 +15,11 @@ set.seed(2022)
 ref_ABM_S1_10x <- readRDS("data/ALLEN_RefData/20220217_lognorm_ref_ABM_S1_10x.rds")
 rowData(ref_ABM_S1_10x)$feature_symbol <- rownames(ref_ABM_S1_10x)
 
+# NOTE - Use only GABA or Glutamatergic neurons when runnning the final analysis of neuron type annotation - keep commented for parameter screen
+#GABA_ref_ABM_S1_10x <- ref_ABM_S1_10x[,colnames(ref_ABM_S1_10x)[ref_ABM_S1_10x$class_label =='GABAergic']]
+#table(GABA_ref_ABM_S1_10x$subclass_label)
+#ref_ABM_S1_10x <- GABA_ref_ABM_S1_10x
+
 #trainset/testset
 test_ref_ABM_S1_10x <- ref_ABM_S1_10x[,sample(colnames(ref_ABM_S1_10x), size = ncol(ref_ABM_S1_10x)/5)]
 test_ref_ABM_S1_10x 

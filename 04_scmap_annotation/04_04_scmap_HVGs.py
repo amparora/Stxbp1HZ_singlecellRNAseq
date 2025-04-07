@@ -15,14 +15,16 @@ os.getcwd()
 ref_ABM_S1_10x = sc.read_loom("data/ALLEN_RefData/20220217_ref_ABM_S1_10x.loom")
 ref_ABM_S1_10x
 
+    #use the following block for GABA and Glutamatergic specific cell annotation runs
+train_ref_ABM_S1_10x = ref_ABM_S1_10x[ref_ABM_S1_10x.obs.class_label == 'Glutamatergic',]
+
 #read training set cell names - training set is randomly selected in a previous step (04_03_scmap_HDOgenes.R). Same training set is taken for consistency
-train_cells =  open('results/20220217_ALL_ref_scmap_lognorm/cellID_train_ref_ABM_S1_10x.txt','r').read().splitlines()
+train_cells =  open('results/20220217_ALL_ref_scmap_lognorm/cellID_train_ref_ABM_S1_10x.txt','r').read().splitlines() # NOTE - these should be only GABA or Glutamatergic in final annotation run
 train_cells
 
-#filter refSet to trainig set
+#filter refSet to trainig set - NOTE - do not run this line to get genes for final GABA/Glutamatergic annotation
 train_ref_ABM_S1_10x = ref_ABM_S1_10x[train_cells,]
 train_ref_ABM_S1_10x
-
 
 #NORMALISATION
     #remove 0 expressed genes
