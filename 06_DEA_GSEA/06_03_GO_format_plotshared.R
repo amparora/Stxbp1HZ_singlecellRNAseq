@@ -13,6 +13,7 @@ theme_update(axis.line=element_line(linetype = 1, size = 0.25), panel.border = e
 
 ## opt
 lev = 'class' #'ctypes' #change this option to run for cell classes or neuronal celltypes
+groupedGO = FALSE # change T/F for aggregating GO group data or keeping one line per GO term
 
 #read seurat dataset
 stxbp1.seurat <- readRDS('results/20220510_seurat_ctannotated.rds')
@@ -62,8 +63,107 @@ for(ct in cts){
       funann.long <- rbind(funann.long, ct.funann[rw,])}
     }}
 
-save(funann, funann.long, file = paste0(lev, '_aggGOtables.RData'))
+# Format output for grouped or not grouped plotting (see opts above)
+GOgroups <- c()
 
+if(lev =='ctypes'){
+  funann.long$manual.groups <- funann.long$GOGroups #only for celltypes 
+}
+
+if(groupedGO==F){
+  grouping = unique(paste(sep='/', funann.long$celltype,funann.long$manual.groups, funann.long$ID, funann.long$Term))
+}
+if(groupedGO){
+  grouping = unique(paste(sep='/', funann.long$celltype,funann.long$manual.groups))
+}
+
+for (grpct in grouping){ 
+
+  ct = strsplit(grpct, '/')[[1]][1]
+  grp = strsplit(grpct, '/')[[1]][2]
+  
+  grp.degs = funann.long$Associated.Genes.Found[funann.long$manual.groups==grp&funann.long$celltype==ct ] 
+  
+    #include term ID and name if not grouping GO terms
+  if(groupedGO==F){
+    GOid = strsplit(grpct, '/')[[1]][3]
+    term = strsplit(grpct, '/')[[1]][4]
+    grp.degs = funann.long$Associated.Genes.Found[funann.long$manual.groups==grp&funann.long$celltype==ct&funann.long$Term==term ] 
+  }
+  
+  if(ct%in%c('Sncg', 'Vip')){class = 'gaba'}else{class = 'gluta'}
+  
+  grp.degs = unique(unlist(lapply(grp.degs, function(input_str) {
+    # Remove the square brackets
+    cleaned_str <- gsub("\\[|\\]", "", input_str)
+    # Split the string by commas and trim any extra whitespace
+    elements <- trimws(strsplit(cleaned_str, ",")[[1]])
+    return(elements)
+  })))
+  
+  ndegs = length(grp.degs)
+  
+  grp.all.associated.genes = funann.long$All.Associated.Genes[funann.long$manual.groups==grp&funann.long$celltype==ct]
+  grp.all.associated.genes = unique(unlist(lapply(grp.all.associated.genes, function(input_str) {
+    # Remove the square brackets
+    cleaned_str <- gsub("\\[|\\]", "", input_str)
+    # Split the string by commas and trim any extra whitespace
+    elements <- trimws(strsplit(cleaned_str, ",")[[1]])
+    return(elements)
+  })))
+  
+  #count up and downregulated DEGs
+  if(ct == 'astro'){
+    ctdeg='Astrocytes'
+  }
+  if(ct == 'gaba'){
+    ctdeg='GABAergicneurons'
+  }
+  if(ct == 'gluta'){
+    ctdeg='Glutamatergicneurons'
+  }
+  
+    #for classes
+  if(lev=='class'){
+    ct.degs <- read.table(paste0('results/20240503_pseudobulkDESeq2_class03/ct2RUV_DEGs_',ctdeg,'.csv'), sep = ';', header = T )
+      #get group name
+    grp.name = funann.long$Term[funann.long$manual.groups==grp&funann.long$celltype==ct&funann.long$manual.groups.name==T][1]
+  }
+  
+    #for cell types
+  if(lev =='ctypes'){
+    if(class=='gluta'){ct.deg<- paste0(ct,'CTX')}else{ct.deg=ct}
+    ct.degs <- read.table(paste0('results/20220511_pseudobulkDESeq1RUV_',class,'_subclass/ct2RUB_',class,'_subclass/ct2RUV_DEGs_', ct.deg,'.csv'), sep = ';', header = T, dec = ',')
+      # get GO with lowest pval as name of group 
+    group00_data <- funann.long[funann.long$manual.groups == grp&funann.long$celltype==ct,]
+    grp.name <- group00_data$Term[order(group00_data$Term.PValue.Corrected.with.Benjamini.Hochberg, decreasing = F)][1]
+    rm(group00_data)
+    }
+
+  ct.degs$padj <-  as.numeric(gsub(",", ".", ct.degs$padj))
+  ct.degs$log2FoldChange <-  as.numeric(gsub(",", ".", ct.degs$log2FoldChange))
+  
+  updegs <- ct.degs$X[ct.degs$log2FoldChange>0&ct.degs$padj<0.1]
+  downdegs <- ct.degs$X[ct.degs$log2FoldChange<0&ct.degs$padj<0.1]
+  
+  grp.updegs <- sum(grp.degs%in%updegs==T)
+  grp.downdegs <- sum(grp.degs%in%downdegs==T)
+  
+
+  grouped = c(celltyp = ct,GOgroup = grp, group.name = grp.name, grp.degs=paste(grp.degs, collapse = ", "), 
+              ndegs = ndegs, nupdegs = grp.updegs, ndowndegs = 0-grp.downdegs, grp.all.associated.genes = paste(grp.all.associated.genes, collapse = ", "))
+  
+  if(groupedGO==F){       #optional include; GOid = GOid ,Term = termfor ungruped GOs
+    grouped = c(GOid = GOid ,Term = term,celltyp = ct,GOgroup = grp, group.name = grp.name, grp.degs=paste(grp.degs, collapse = ", "), 
+                ndegs = ndegs, nupdegs = grp.updegs, ndowndegs = 0-grp.downdegs, grp.all.associated.genes = paste(grp.all.associated.genes, collapse = ", "))
+    rm(GOid, term)
+  }
+  GOgroups <- rbind(GOgroups, grouped)
+  rm(ct, grp, grp.name, grp.degs, ndegs, grp.updegs, grp.downdegs, grp.all.associated.genes)
+}
+GOgroups = as.data.frame(GOgroups)
+
+save(funann, funann.long, GOgroups, lev, groupedGO, file = paste0(lev,'_isgrouped',groupedGO, '_aggGOtables.RData'))
 
 ## Plot Shared genes in neuronal classes
 #get number of shared genes
