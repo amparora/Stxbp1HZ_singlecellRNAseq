@@ -2,8 +2,8 @@
 
 Code accompanying the manuscript
 
-## Widespread transcriptomic changes in Sncg interneurons and deep-layer pyramidal neurons in a mouse model of STXBP1-related disorder
-Roig Adam, Amparo;van Berkel, Annemiek A.; Bast, Lisa; Smit, August B; Sullivan, Patrick F.; Hjerling-Leffler, Jens; Verhage, Matthijs
+## Single cell RNA-sequencing reveals neuron type-specific vulnerabilities in a model of STXBP1-related disorder
+Roig Adam, Amparo;van Berkel, Annemiek A.; Vanheusden, Matthew; Bast, Lisa; Smit, August B; Sullivan, Patrick F.; Hjerling-Leffler, Jens; Verhage, Matthijs
 
 Pubication available at XXXXXXX
 
